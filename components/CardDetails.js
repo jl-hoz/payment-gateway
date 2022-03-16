@@ -1,47 +1,80 @@
-import { useState } from "react";
+import React from 'react';
+import { CardElement, IbanElement, useStripe, useElements, CardNumberElement, PaymentElement } from '@stripe/react-stripe-js';
+
+import styles from './CardDetails.module.css';
 
 const CardDetails = () => {
+  const stripe = useStripe();
+  const elements = useElements();
 
-  const [fullname, setFullname] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiration, setExpiration] = useState("");
-  const [cvc, setCVC] = useState("");
+  const handleSubmit = async (e) => {
+    // We don't want to let default form submission happen here,
+    // which would refresh the page.
+    e.preventDefault();
 
-  const submit = () => {
-    console.log(fullname);
-    console.log(cardNumber);
-    console.log(expiration);
-    console.log(cvc);
+    if (!stripe || !elements) {
+      // Stripe.js has not yet loaded.
+      // Make sure to disable form submission until Stripe.js has loaded.
+      addMessage('Stripe.js has not yet loaded.');
+      return;
+    }
 
-    event.preventDefault();
-  }
+    const {error: backendError, clientSecret} = await fetch(
+      'http://localhost:4242/create-payment-intent',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paymentMethodType: 'card',
+          currency: 'usd',
+        }),
+      }
+    ).then((r) => r.json());
+
+    if (backendError) {
+      addMessage(backendError.message);
+      return;
+    }
+
+    addMessage('Client secret returned');
+
+    const {error: stripeError, paymentIntent} = await stripe.confirmCardPayment(
+      clientSecret,
+      {
+        payment_method: {
+          card: elements.getElement(CardElement),
+          billing_details: {
+            name: 'Jenny Rosen',
+          },
+        },
+      }
+    );
+
+    if (stripeError) {
+      // Show error to your customer (e.g., insufficient funds)
+      addMessage(stripeError.message);
+      return;
+    }
+
+    // Show a success message to your customer
+    // There's a risk of the customer closing the window before callback
+    // execution. Set up a webhook or plugin to listen for the
+    // payment_intent.succeeded event that handles any business critical
+    // post-payment actions.
+    addMessage(`Payment ${paymentIntent.status}: ${paymentIntent.id}`);
+  };
 
   return (
-    <div className="container bg-slate-200">
-      <form onSubmit={submit}>
-        <div className="pt-6 mb-6">
-          <label htmlFor="full-name" className="block mb-2 text-sm font-medium">Full name</label>
-          <input type="text" id="full-name" onChange={(e) => setFullname(e.target.value)} className="border bg-slate-300 border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 " />
-        </div>
-        <div className="mb-6">
-          <label htmlFor="card-number" className="block mb-2 text-sm font-medium">Card number</label>
-          <input type="text" id="card-number" onChange={(e) => setCardNumber(e.target.value)} className="border bg-slate-300 border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 " />
-        </div>
-        <div className="flex flex-wrap space-x-4">
-          <div className="mb-6">
-            <label htmlFor="expiration" className="block mb-2 text-sm font-medium">Expiration</label>
-            <input type="text" id="expiration" onChange={(e) => setExpiration(e.target.value)} className="border bg-slate-300 border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 " />
-          </div>
-          <div className="mb-6">
-            <label htmlFor="cvc" className="block mb-2 text-sm font-medium">CVC</label>
-            <input type="text" id="cvc" onChange={(e) => setCVC(e.target.value)} className="border bg-slate-300 border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 " />
-          </div>
-        </div>
-        <input type="submit" value="Submit" />
+    <div className={styles.card}>
+      <form id="payment-form" className={styles.paymentform} onSubmit={handleSubmit}>
+        <label htmlFor="card-element">Card</label>
+        <CardElement id="card-element"/>
+        <button type="submit" disabled={!stripe}>Pay</button>
       </form>
     </div>
   );
-
-}
+};
 
 export default CardDetails;

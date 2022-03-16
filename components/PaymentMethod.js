@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import { useState } from "react";
-import styles from '../styles/PaymentMethod.module.css';
 
 const PaymentMethod = (props) => {
 
