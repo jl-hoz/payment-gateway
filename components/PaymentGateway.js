@@ -5,6 +5,7 @@ import { loadStripe } from '@stripe/stripe-js';
 
 import PaymentMethod from "./PaymentMethod";
 import CardDetails from "./CardDetails";
+import SepaDetails from "./SepaDetails";
 
 const PaymentGateway = () => {
 
@@ -48,6 +49,7 @@ const PaymentGateway = () => {
     <div>
       {method === "" ? paymentMethods : null}
       {method === "Card" ? <Elements options={options} stripe={stripeKey}><CardDetails/></Elements> : null}
+      {method === "Bank debit" ? <Elements options={options} stripe={stripeKey}><SepaDetails/></Elements> : null}
     </div>
   );
 
