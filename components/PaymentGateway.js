@@ -38,18 +38,11 @@ const PaymentGateway = () => {
 
   const stripeKey = loadStripe(publishableKey);
 
-  const appearance = {
-    theme: 'stripe',
-  };
-  const options = {
-    appearance,
-  };
-
   return (
     <div>
       {method === "" ? paymentMethods : null}
-      {method === "Card" ? <Elements options={options} stripe={stripeKey}><CardDetails/></Elements> : null}
-      {method === "Bank debit" ? <Elements options={options} stripe={stripeKey}><SepaDetails/></Elements> : null}
+      {method === "Card" ? <Elements stripe={stripeKey}><CardDetails/></Elements> : null}
+      {method === "Bank debit" ? <Elements stripe={stripeKey}><SepaDetails/></Elements> : null}
     </div>
   );
 

@@ -20,7 +20,7 @@ const CardDetails = () => {
     }
 
     const {error: backendError, clientSecret} = await fetch(
-      'http://localhost:4242/create-payment-intent',
+      'http://localhost:4242/api/v1/create-payment-intent',
       {
         method: 'POST',
         headers: {
@@ -33,12 +33,13 @@ const CardDetails = () => {
       }
     ).then((r) => r.json());
 
+    /*
     if (backendError) {
       addMessage(backendError.message);
       return;
-    }
+    }*/
 
-    addMessage('Client secret returned');
+    //addMessage('Client secret returned');
 
     const {error: stripeError, paymentIntent} = await stripe.confirmCardPayment(
       clientSecret,
@@ -54,7 +55,7 @@ const CardDetails = () => {
 
     if (stripeError) {
       // Show error to your customer (e.g., insufficient funds)
-      addMessage(stripeError.message);
+      //addMessage(stripeError.message);
       return;
     }
 
@@ -63,7 +64,7 @@ const CardDetails = () => {
     // execution. Set up a webhook or plugin to listen for the
     // payment_intent.succeeded event that handles any business critical
     // post-payment actions.
-    addMessage(`Payment ${paymentIntent.status}: ${paymentIntent.id}`);
+    //addMessage(`Payment ${paymentIntent.status}: ${paymentIntent.id}`);
   };
 
   return (

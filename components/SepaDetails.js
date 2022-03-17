@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import {IbanElement, useStripe, useElements} from '@stripe/react-stripe-js';
+import StatusMessages, {useMessages} from './StatusMessages';
 
 import styles from './SepaDetails.module.css';
 
@@ -9,6 +10,8 @@ const SepaDetails = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [readedTerms, setReadedTerms] = useState(false);
+  const [messages, addMessage] = useMessages();
+
 
   const toggleTerms = () => {
     setReadedTerms(!readedTerms);
@@ -27,7 +30,7 @@ const SepaDetails = () => {
     }
 
     const {error: backendError, clientSecret} = await fetch(
-      '/create-payment-intent',
+      'http://localhost:4242/api/v1/sepa',
       {
         method: 'POST',
         headers: {
@@ -36,6 +39,8 @@ const SepaDetails = () => {
         body: JSON.stringify({
           paymentMethodType: 'sepa_debit',
           currency: 'eur',
+          name,
+          email
         }),
       }
     ).then((r) => r.json());
@@ -73,7 +78,7 @@ const SepaDetails = () => {
     // In practice, you should use webhook notifications for fulfillment.
     if(paymentIntent.status === 'processing') {
       addMessage(
-        `Payment processing: ${paymentIntent.id} check webhook events for fulfillment.`
+       `Payment processing: ${paymentIntent.id} check webhook events for fulfillment.`
       );
       addMessage('Refetching payment intent in 5s.');
       setTimeout(async () => {
@@ -145,6 +150,8 @@ const SepaDetails = () => {
 
         <button type="submit" disabled={!stripe || !readedTerms}>Pay</button>
       </form>
+
+      <StatusMessages messages={messages} />
 
     </div>
   );
